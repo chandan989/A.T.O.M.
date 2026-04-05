@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATOM | Own Your Digital Identity</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Space+Grotesk:wght@400;600;700&family=VT323&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Tailwind Configuration matching ATOM Design System -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        atom: {
+                            purple: '#7B3EFC',
+                            black: '#000000',
+                            white: '#FFFFFF',
+                            green: '#CCFF00',
+                            orange: '#FF5415',
+                            gray: {
+                                light: '#E5E5E5',
+                                dark: '#1A1A1A'
+                            }
+                        }
+                    },
+                    fontFamily: {
+                        display: ['"VT323"', 'monospace'],
+                        sans: ['"Space Grotesk"', 'sans-serif'],
+                        mono: ['"Fira Code"', 'monospace']
+                    },
+                    fontSize: {
+                        'display': ['64px', { lineHeight: '1.1', letterSpacing: '-0.02em' }],
+                        'h1': ['48px', { lineHeight: '1.1', letterSpacing: '-0.02em' }],
+                        'h2': ['32px', { lineHeight: '1.2', letterSpacing: '-0.01em' }],
+                        'lg': ['20px', { lineHeight: '1.5' }],
+                        'base': ['16px', { lineHeight: '1.5' }],
+                        'sm': ['14px', { lineHeight: '1.4', letterSpacing: '0.05em' }]
+                    },
+                    boxShadow: {
+                        'brutal': '4px 4px 0px 0px #000000',
+                        'brutal-white': '4px 4px 0px 0px #FFFFFF',
+                        'brutal-green': '4px 4px 0px 0px #CCFF00',
+                    },
+                    transitionDuration: {
+                        'fast': '100ms'
+                    },
+                    animation: {
+                        'marquee': 'marquee 15s linear infinite',
+                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        marquee: {
+                            '0%': { transform: 'translateX(0%)' },
+                            '100%': { transform: 'translateX(-50%)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Strict Brutalist Enforcements */
+        * {
+            border-radius: 0px !important;
+        }
+
+        /* Grid Background Pattern - "Expose the grid. Let the user see the math." */
+        .bg-graph-light {
+            background-color: #FFFFFF;
+            background-image:
+                linear-gradient(#E5E5E5 1px, transparent 1px),
+                linear-gradient(90deg, #E5E5E5 1px, transparent 1px);
+            background-size: 32px 32px;
+            background-position: -1px -1px;
+        }
+
+        .bg-graph-dark {
+            background-color: #000000;
+            background-image:
+                linear-gradient(#1A1A1A 1px, transparent 1px),
+                linear-gradient(90deg, #1A1A1A 1px, transparent 1px);
+            background-size: 32px 32px;
+            background-position: -1px -1px;
+        }
+
+        /* Focus outline management */
+        *:focus-visible {
+            outline: 2px solid #CCFF00 !important;
+            outline-offset: 2px !important;
+        }
+
+        /* Disable smooth scrolling for mechanical feel */
+        html {
+            scroll-behavior: auto !important;
+        }
+    </style>
+</head>
+<body class="bg-atom-white text-atom-black font-sans antialiased selection:bg-atom-green selection:text-black w-full overflow-x-hidden">
+
+    <!-- NAVIGATION -->
+    <nav class="w-full border-b-2 border-black bg-white relative z-50 flex flex-col md:flex-row">
+        <div class="w-full md:w-1/4 border-b-2 md:border-b-0 md:border-r-2 border-black p-4 flex items-center justify-center md:justify-start bg-atom-purple">
+            <span class="font-display text-h1 text-white tracking-widest leading-none">ATOM_</span>
+        </div>
+        <div class="w-full md:w-1/2 border-b-2 md:border-b-0 md:border-r-2 border-black p-4 flex items-center justify-center bg-graph-light hidden md:flex">
+            <span class="font-mono text-sm uppercase text-gray-500 font-bold bg-white px-2 py-1 border border-atom-gray-light">SYS.STATUS: ONLINE</span>
+        </div>
+        <div class="w-full md:w-1/4 flex items-stretch">
+            <a href="#terminal" class="w-full flex items-center justify-center px-8 py-4 font-sans font-bold uppercase tracking-wide bg-white hover:bg-atom-green transition-colors duration-fast text-lg group">
+                Initialize
+                <svg class="ml-2 w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-fast" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <path d="M5 19L19 5M19 5V15M19 5H9" />
+                </svg>
+            </a>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <header class="w-full border-b-2 border-black flex flex-col xl:flex-row bg-graph-light">
+        <!-- Left: Copy & Input -->
+        <div class="w-full xl:w-2/3 border-b-2 xl:border-b-0 xl:border-r-2 border-black p-8 md:p-16 lg:p-24 flex flex-col justify-center bg-white/90 backdrop-blur-sm">
+            <div class="inline-block mb-6 self-start">
+                <span class="font-mono text-sm uppercase bg-black text-atom-green px-3 py-1 shadow-brutal font-bold">v2.0.4 // Core Update</span>
+            </div>
+
+            <h1 class="font-display text-5xl md:text-7xl lg:text-8xl uppercase leading-tight mb-4 text-black">
+                Own Your<br>Digital Identity.
+            </h1>
+
+            <h2 class="font-sans text-h2 uppercase mb-12 text-black font-bold border-l-4 border-atom-orange pl-4">
+                No Permission Required.
+            </h2>
+
+            <!-- Terminal Input Component -->
+            <div class="flex flex-col w-full max-w-2xl mt-4">
+                <label class="font-mono text-sm text-black mb-2 uppercase font-bold">Register Alias / Protocol</label>
+                <div class="flex w-full border-2 border-black shadow-brutal bg-white focus-within:ring-2 focus-within:ring-atom-green focus-within:ring-offset-2 focus-within:ring-offset-white relative z-10 group">
+                    <div class="w-14 flex-shrink-0 bg-atom-purple border-r-2 border-black flex items-center justify-center group-focus-within:bg-atom-green transition-colors duration-fast">
+                        <span class="font-display text-white group-focus-within:text-black text-h2 leading-none mt-1">>_</span>
+                    </div>
+                    <input type="text" placeholder="EX: USER@ATOM" class="flex-1 bg-transparent px-4 py-4 font-mono text-base md:text-lg uppercase outline-none placeholder-gray-400 text-black">
+                    <button class="bg-black text-white px-6 md:px-8 font-sans font-bold uppercase border-l-2 border-black hover:bg-atom-orange active:translate-y-[2px] transition-all duration-fast flex items-center">
+                        Execute
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Brutalist Graphic -->
+        <div class="w-full xl:w-1/3 bg-atom-purple p-8 md:p-16 flex items-center justify-center relative min-h-[400px]">
+            <!-- Decorative Grid inside -->
+            <div class="absolute inset-4 border-2 border-black opacity-30 flex flex-col">
+                <div class="flex-1 border-b-2 border-black"></div>
+                <div class="flex-1 border-b-2 border-black"></div>
+                <div class="flex-1"></div>
+            </div>
+            <div class="absolute inset-4 border-2 border-transparent flex">
+                <div class="flex-1 border-r-2 border-black opacity-30"></div>
+                <div class="flex-1 border-r-2 border-black opacity-30"></div>
+                <div class="flex-1"></div>
+            </div>
+
+            <!-- Floating Data Block -->
+            <div class="bg-black border-2 border-black p-6 shadow-brutal-white z-10 w-full max-w-sm hover:-translate-y-2 hover:translate-x-2 transition-transform duration-fast">
+                <div class="flex justify-between items-center mb-6 border-b-2 border-atom-gray-dark pb-2">
+                    <span class="font-mono text-atom-green text-sm font-bold uppercase animate-pulse-fast">● Live Node</span>
+                    <span class="font-mono text-white text-sm">SEC_ID: 0x9F</span>
+                </div>
+                <div class="space-y-4 font-mono text-sm text-gray-400">
+                    <div class="flex justify-between">
+                        <span>> HASH_RATE</span>
+                        <span class="text-white">OPTIMAL</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>> ENCRYPTION</span>
+                        <span class="text-white">MIL-SPEC</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>> SOVEREIGNTY</span>
+                        <span class="text-atom-orange font-bold">ABSOLUTE</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MARQUEE TAPE -->
+    <div class="w-full bg-atom-green border-b-2 border-black overflow-hidden py-3 whitespace-nowrap flex items-center relative z-10 shadow-brutal">
+        <div class="animate-marquee font-display text-4xl uppercase tracking-widest text-black flex gap-8 min-w-[200%]">
+            <span>TRANSPARENT.</span>
+            <span>SOVEREIGN.</span>
+            <span>UNAPOLOGETIC.</span>
+            <span>TRANSPARENT.</span>
+            <span>SOVEREIGN.</span>
+            <span>UNAPOLOGETIC.</span>
+            <span>TRANSPARENT.</span>
+            <span>SOVEREIGN.</span>
+            <span>UNAPOLOGETIC.</span>
+            <span>TRANSPARENT.</span>
+            <span>SOVEREIGN.</span>
+            <span>UNAPOLOGETIC.</span>
+        </div>
+    </div>
+
+    <!-- FEATURES GRID -->
+    <section class="w-full grid grid-cols-1 lg:grid-cols-3 bg-white">
+
+        <!-- Feature 1 -->
+        <article class="p-8 lg:p-12 border-b-2 lg:border-b-0 lg:border-r-2 border-black flex flex-col bg-graph-light hover:bg-atom-gray-light transition-colors duration-fast">
+            <div class="mb-12">
+                <span class="inline-block bg-atom-orange text-white font-mono px-2 py-1 text-sm font-bold border-2 border-black shadow-brutal uppercase">
+                    01_Architecture
+                </span>
+            </div>
+            <div class="mt-auto">
+                <svg class="w-12 h-12 mb-6 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" />
+                    <path d="M3 9H21M9 21V9" />
+                </svg>
+                <h3 class="font-sans text-h2 uppercase font-bold mb-4">Structure Is Surface.</h3>
+                <p class="font-mono text-base text-gray-800 leading-relaxed">
+                    Expose the grid. Let the user see the math. Function dictates form. There is nowhere to hide poor architecture in a transparent protocol.
+                </p>
+            </div>
+        </article>
+
+        <!-- Feature 2 -->
+        <article class="p-8 lg:p-12 border-b-2 lg:border-b-0 lg:border-r-2 border-black flex flex-col bg-black text-white hover:bg-atom-gray-dark transition-colors duration-fast group">
+            <div class="mb-12">
+                <span class="inline-block bg-atom-purple text-white font-mono px-2 py-1 text-sm font-bold border-2 border-white shadow-brutal-white uppercase">
+                    02_Aesthetics
+                </span>
+            </div>
+            <div class="mt-auto">
+                <svg class="w-12 h-12 mb-6 text-atom-green group-hover:scale-110 transition-transform duration-fast" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L2 22h20L12 2z" />
+                    <path d="M12 22V10" />
+                </svg>
+                <h3 class="font-sans text-h2 uppercase font-bold mb-4">Zero Fluff.</h3>
+                <p class="font-mono text-base text-gray-400 leading-relaxed">
+                    Sharp edges. High contrast. Drop shadows are dead. Information density is king. We stripped away the marketing jargon and left only the raw signal.
+                </p>
+            </div>
+        </article>
+
+        <!-- Feature 3 -->
+        <article class="p-8 lg:p-12 border-b-2 border-black lg:border-b-0 flex flex-col bg-white hover:bg-atom-green transition-colors duration-fast">
+            <div class="mb-12">
+                <span class="inline-block bg-black text-white font-mono px-2 py-1 text-sm font-bold border-2 border-black shadow-brutal uppercase">
+                    03_Control
+                </span>
+            </div>
+            <div class="mt-auto">
+                <svg class="w-12 h-12 mb-6 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    <circle cx="12" cy="12" r="3" />
+                </svg>
+                <h3 class="font-sans text-h2 uppercase font-bold mb-4">Absolute Control.</h3>
+                <p class="font-mono text-base text-gray-800 leading-relaxed">
+                    Bridge the gap between raw protocol and user interface. Direct commands only. You hold the keys, you make the rules. No middlemen.
+                </p>
+            </div>
+        </article>
+
+    </section>
+
+    <!-- DARK MODE / TERMINAL SECTION -->
+    <section id="terminal" class="w-full border-b-2 border-t-2 border-black bg-graph-dark text-white flex flex-col md:flex-row">
+        <div class="w-full md:w-1/2 p-8 md:p-16 border-b-2 md:border-b-0 md:border-r-2 border-black flex flex-col justify-center">
+            <h2 class="font-display text-display uppercase leading-tight mb-8 text-atom-green drop-shadow-[2px_2px_0_#FFFFFF]">
+                Cryptographic<br>Authority.
+            </h2>
+            <p class="font-mono text-lg text-gray-400 mb-8 border-l-2 border-atom-purple pl-4">
+                Deploy smart contracts directly from the terminal layer. Experience unfiltered access to the decentralized grid.
+            </p>
+
+            <button class="self-start inline-flex items-center justify-center font-sans font-bold uppercase tracking-wide border-2 border-white bg-transparent text-white px-8 py-4 hover:bg-white hover:text-black active:translate-y-[2px] transition-all duration-fast group shadow-brutal-white">
+                Read Documentation
+                <svg class="ml-2 w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-fast" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 19L19 5M19 5V15M19 5H9" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="w-full md:w-1/2 p-8 md:p-16 bg-black flex items-center justify-center">
+            <!-- Simulated Terminal Window -->
+            <div class="w-full border-2 border-atom-gray-dark bg-black shadow-[8px_8px_0px_0px_#1A1A1A]">
+                <!-- Terminal Header -->
+                <div class="border-b-2 border-atom-gray-dark bg-atom-gray-dark/50 px-4 py-2 flex items-center justify-between">
+                    <span class="font-mono text-xs uppercase text-gray-400">root@atom-protocol</span>
+                    <div class="flex gap-2">
+                        <div class="w-3 h-3 border border-gray-500"></div>
+                        <div class="w-3 h-3 border border-gray-500"></div>
+                        <div class="w-3 h-3 bg-white"></div>
+                    </div>
+                </div>
+                <!-- Terminal Body -->
+                <div class="p-6 font-mono text-sm leading-relaxed text-gray-300 h-64 overflow-y-hidden flex flex-col justify-end">
+                    <div class="opacity-50">> initializing protocol...</div>
+                    <div class="opacity-50">> fetching nodes [OK]</div>
+                    <div class="text-atom-green mb-4">> SECURE CONNECTION ESTABLISHED</div>
+                    <div>$ atom core:deploy --network=mainnet</div>
+                    <div class="text-atom-orange my-2">WARNING: This action is irreversible.</div>
+                    <div class="flex items-center gap-2">
+                        <span>$</span>
+                        <span class="w-3 h-5 bg-white animate-pulse"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="w-full bg-white flex flex-col md:flex-row">
+        <div class="w-full md:w-1/2 p-8 md:p-16 border-b-2 md:border-b-0 md:border-r-2 border-black flex flex-col justify-between">
+            <div>
+                <span class="font-display text-h1 uppercase text-black block mb-4">ATOM.</span>
+                <p class="font-mono text-sm uppercase text-gray-600 font-bold max-w-xs">
+                    The underlying architecture for the sovereign web.
+                </p>
+            </div>
+            <div class="mt-16 pt-8 border-t-2 border-atom-gray-light font-mono text-sm font-bold text-black uppercase">
+                (C) 2026 THE GRID. ALL RIGHTS RESERVED.
+            </div>
+        </div>
+
+        <div class="w-full md:w-1/2 grid grid-cols-2">
+            <div class="p-8 border-r-2 border-b-2 md:border-b-0 border-black flex flex-col gap-4 font-sans font-bold uppercase text-lg">
+                <span class="font-mono text-sm text-gray-500 mb-4">Index_</span>
+                <a href="#" class="hover:text-atom-purple hover:underline decoration-2 underline-offset-4 transition-colors">Protocol</a>
+                <a href="#" class="hover:text-atom-purple hover:underline decoration-2 underline-offset-4 transition-colors">Nodes</a>
+                <a href="#" class="hover:text-atom-purple hover:underline decoration-2 underline-offset-4 transition-colors">Governance</a>
+                <a href="#" class="hover:text-atom-purple hover:underline decoration-2 underline-offset-4 transition-colors">Whitepaper</a>
+            </div>
+            <div class="p-8 border-b-2 md:border-b-0 border-black flex flex-col gap-4 font-sans font-bold uppercase text-lg bg-atom-gray-light">
+                <span class="font-mono text-sm text-gray-500 mb-4">Social_</span>
+                <a href="#" class="hover:text-atom-orange hover:bg-black hover:px-2 transition-all duration-fast">Twitter ↗</a>
+                <a href="#" class="hover:text-atom-orange hover:bg-black hover:px-2 transition-all duration-fast">Github ↗</a>
+                <a href="#" class="hover:text-atom-orange hover:bg-black hover:px-2 transition-all duration-fast">Discord ↗</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
