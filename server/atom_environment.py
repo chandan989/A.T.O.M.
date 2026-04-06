@@ -83,6 +83,20 @@ class AtomEnvironment(Environment):
         )
 
     def step(self, action: AtomAction) -> AtomObservation:
+        # Robust parsing to handle openenv base Action wrapping
+        if not isinstance(action, AtomAction):
+            if hasattr(action, 'model_dump'):
+                # Pydantic v2 Base Action. The actual dictionary might be inside 'action' or '__pydantic_extra__'
+                d = action.model_dump()
+                if "action" in d and isinstance(d["action"], dict):
+                    action = AtomAction(**d["action"])
+                elif hasattr(action, '__pydantic_extra__') and action.__pydantic_extra__:
+                    action = AtomAction(**action.__pydantic_extra__)
+                else:
+                    action = AtomAction(**d)
+            elif isinstance(action, dict):
+                action = AtomAction(**action)
+
         self._state.step_count += 1
 
         message = ""

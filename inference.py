@@ -12,7 +12,6 @@ import time
 from typing import Dict, Any, List
 
 from openai import OpenAI
-from openenv.core.env_server.client import EnvClient
 
 # We mock EnvClient by importing the generated client or manually creating a thin wrapper.
 # OpenEnv client expects standard http/ws calls to reset/step endpoints.
@@ -31,7 +30,7 @@ class SimpleAtomClient:
         return resp.json()
 
     def step(self, action: Dict[str, Any]):
-        resp = httpx.post(f"{self.base_url}/env/step", json=action, headers=self.headers)
+        resp = httpx.post(f"{self.base_url}/env/step", json={"action": action}, headers=self.headers)
         resp.raise_for_status()
         return resp.json()
 
@@ -137,13 +136,23 @@ Respond ONLY with valid JSON in this format:
     return result['reward']
 
 def main():
-    api_key = os.environ.get("HF_TOKEN", "dummy")
-    base_url = os.environ.get("API_BASE_URL", "https://api.openai.com/v1")
-    model_name = os.environ.get("MODEL_NAME", "gpt-4o-mini")
+    # ==============================================================
+    # CONFIGURATION: Paste your keys between the quotes below!
+    # ==============================================================
+    
+    # 1. Your Hugging Face Token (starts with hf_...)
+    api_key = os.environ.get("HF_TOKEN", "PASTE_YOUR_HF_TOKEN_HERE")
+    
+    # 2. Your ATOM Server Key (from the Hugging Face Logs)
+    atom_api_key = os.environ.get("ATOM_API_KEY", "5353ab6b84747985eaa225c789645fbedde841887c1d0c17ee725bd01b0c95d7")
+    
+    # 3. Your Space URL (No trailing slash)
+    atom_server_url = os.environ.get("ATOM_SERVER_URL", "https://nikhhil07-atom-env.hf.space")
 
-    # ATOM server API key (generated on server boot, printed in console)
-    atom_api_key = os.environ.get("ATOM_API_KEY", "")
-    atom_server_url = os.environ.get("ATOM_SERVER_URL", "http://localhost:8000")
+    # ==============================================================
+    
+    base_url = os.environ.get("API_BASE_URL", "https://router.huggingface.co/v1/")
+    model_name = os.environ.get("MODEL_NAME", "meta-llama/Llama-3.3-70B-Instruct")
 
     print(f"Using Model: {model_name}")
     print(f"Using API Base: {base_url}")
