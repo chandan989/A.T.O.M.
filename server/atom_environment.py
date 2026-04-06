@@ -59,6 +59,22 @@ class AtomEnvironment(Environment):
         self.tracker = TrajectoryTracker()
 
         self.current_mol = Chem.MolFromSmiles(self.task.starting_scaffold)
+        if self.current_mol is None:
+            # Invalid starting scaffold SMILES — return an error observation
+            self.current_smiles = self.task.starting_scaffold
+            self.current_properties = {}
+            return AtomObservation(
+                current_smiles=self.current_smiles,
+                current_properties=self.current_properties,
+                target_profile=self.task.tpp,
+                message=f"ERROR: Invalid starting scaffold SMILES '{self.task.starting_scaffold}'. Could not parse molecule.",
+                valid_sites=None,
+                step_number=self._state.step_count,
+                max_steps=self.task.max_steps,
+                done=True,
+                trajectory_summary=None,
+                reward=0.0
+            )
         self.current_smiles = Chem.MolToSmiles(self.current_mol)
         self.current_properties = compute_properties(self.current_mol)
 
@@ -98,6 +114,21 @@ class AtomEnvironment(Environment):
                 action = AtomAction(**action)
 
         self._state.step_count += 1
+
+        # Guard: current_mol must not be None (reset must be called first)
+        if self.current_mol is None:
+            return AtomObservation(
+                current_smiles=self.current_smiles or "",
+                current_properties=self.current_properties or {},
+                target_profile=self.task.tpp if hasattr(self, 'task') and self.task else {},
+                message="ERROR: No molecule loaded. Call reset() before step().",
+                valid_sites=None,
+                step_number=self._state.step_count,
+                max_steps=self.task.max_steps if hasattr(self, 'task') and self.task else 0,
+                done=True,
+                trajectory_summary=None,
+                reward=0.0
+            )
 
         message = ""
         valid_sites = None

@@ -141,10 +141,10 @@ def main():
     # ==============================================================
     
     # 1. Your Hugging Face Token (starts with hf_...)
-    api_key = os.environ.get("HF_TOKEN", "PASTE_YOUR_HF_TOKEN_HERE")
+    api_key = os.environ.get("HF_TOKEN", "")
     
     # 2. Your ATOM Server Key (from the Hugging Face Logs)
-    atom_api_key = os.environ.get("ATOM_API_KEY", "5353ab6b84747985eaa225c789645fbedde841887c1d0c17ee725bd01b0c95d7")
+    atom_api_key = os.environ.get("ATOM_API_KEY", "c042d6836ea40a402be1cb154f253d4525219722bf5c99a025c6395cb75f0773")
     
     # 3. Your Space URL (No trailing slash)
     atom_server_url = os.environ.get("ATOM_SERVER_URL", "https://nikhhil07-atom-env.hf.space")
