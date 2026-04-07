@@ -156,32 +156,6 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
         # Execute request
         response = await call_next(request)
 
-        # Intercept reset/step responses to broadcast to observers
-        if request.url.path in ("/env/reset", "/env/step") and response.status_code == 200:
-            # Read the response body
-            body_bytes = b""
-            async for chunk in response.body_iterator:
-                body_bytes += chunk
-
-            # Try to parse and broadcast
-            try:
-                data = json.loads(body_bytes)
-                event_type = "reset" if "reset" in request.url.path else "step"
-                await observer_manager.broadcast({
-                    "type": event_type,
-                    "data": data,
-                })
-            except Exception:
-                pass
-
-            # Re-create the response with the body we consumed
-            return Response(
-                content=body_bytes,
-                status_code=response.status_code,
-                headers=dict(response.headers),
-                media_type=response.media_type,
-            )
-
         return response
 
 
@@ -279,10 +253,72 @@ async def websocket_observe(websocket: WebSocket):
         await observer_manager.disconnect(websocket)
 
 
-# ── Mount the openenv app at /env ─────────────────────────────
-# The openenv endpoints (/reset, /step, /state, /ws, /health)
-# will be accessible under /env/reset, /env/step, etc.
-app.mount("/env", openenv_app)
+# ── Persistent Environment Manager ────────────────────────────
+# OpenEnv HTTP endpoints are stateless (create+destroy env per request).
+# We need stateful reset→step, so we manage a persistent env instance.
+
+class EnvManager:
+    """Manages a persistent AtomEnvironment instance for HTTP API."""
+    def __init__(self):
+        self.env: Optional[AtomEnvironment] = None
+
+    def get_or_create(self) -> AtomEnvironment:
+        if self.env is None:
+            self.env = AtomEnvironment()
+        return self.env
+
+    def reset_env(self, task_id: int = 1):
+        self.env = AtomEnvironment(task_id=task_id)
+        return self.env
+
+env_manager = EnvManager()
+
+
+@app.post("/env/reset")
+async def env_reset(task_id: int = 1):
+    """Reset the environment with a new task. Returns initial observation."""
+    env = env_manager.reset_env(task_id)
+    obs = env.reset(task_id=task_id)
+
+    result = {
+        "observation": obs.model_dump() if hasattr(obs, 'model_dump') else obs.__dict__,
+        "reward": 0.0,
+        "done": False,
+    }
+
+    await observer_manager.broadcast({"type": "reset", "data": result})
+    return result
+
+
+@app.post("/env/step")
+async def env_step(request: Request):
+    """Execute an action on the current environment. Returns observation."""
+    body = await request.json()
+    action_data = body.get("action", body)
+
+    env = env_manager.get_or_create()
+
+    try:
+        action = AtomAction(**action_data)
+    except Exception as e:
+        return {"error": f"Invalid action: {str(e)}"}
+
+    obs = env.step(action)
+    done = getattr(obs, 'done', False)
+    reward = getattr(obs, 'reward', 0.0)
+
+    result = {
+        "observation": obs.model_dump() if hasattr(obs, 'model_dump') else obs.__dict__,
+        "reward": reward,
+        "done": done,
+    }
+
+    await observer_manager.broadcast({"type": "step", "data": result})
+    return result
+
+
+# ── Mount the openenv app at /env/openenv (for schema/ws/etc) ─
+app.mount("/env/openenv", openenv_app)
 
 
 # ── Serve React frontend (in Docker) ─────────────────────────
