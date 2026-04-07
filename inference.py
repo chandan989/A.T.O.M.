@@ -91,23 +91,32 @@ def run_task(
     }))
 
     valid_sites_cache: Optional[List] = None
+    action_history: List[Dict] = []  # Track past actions + rewards for ICL
 
     for step in range(max_steps):
         # Track valid sites across steps
         if observation.get("valid_sites"):
             valid_sites_cache = observation["valid_sites"]
 
-        # ── Build prompt ──────────────────────────────────────
+        # ── Build feedback from history ───────────────────────
+        history_text = ""
+        if action_history:
+            history_text = "\n\nPrevious Actions & Results:\n"
+            for h in action_history[-5:]:  # Last 5 actions to stay within context
+                history_text += f"- Action: {json.dumps(h['action'])} → {h['feedback']} (reward: {h['reward']:.3f})\n"
+            history_text += "\nUse this feedback to make BETTER choices. Avoid repeating actions that got low rewards.\n"
+
+        # ── Build prompt with ICL feedback ────────────────────
         if valid_sites_cache:
-            prompt = f"""You are an expert medicinal chemist. You MUST now add a fragment to optimize this molecule.
+            prompt = f"""You are an expert medicinal chemist optimizing a molecule to match a Target Product Profile (TPP).
 
 Current SMILES: {observation['current_smiles']}
 Current Properties: {json.dumps(observation['current_properties'], indent=2)}
 Target Profile (TPP): {json.dumps(observation['target_profile'], indent=2)}
 Step: {step+1}/{max_steps}
-
+{history_text}
 You ALREADY have valid sites. You MUST use "add_fragment" now. Do NOT call "get_valid_sites" again.
-Pick the best fragment and site to move properties closer to the TPP ranges.
+Analyze the GAP between current properties and target ranges. Pick the fragment that closes the biggest gap.
 
 Valid Sites:
 {json.dumps(valid_sites_cache, indent=2)}
@@ -195,6 +204,13 @@ Respond with ONLY a JSON object:
         observation = result.get("observation", observation)
         reward = result.get("reward", 0.0)
         done = result.get("done", False)
+
+        # ── Record to history for ICL feedback loop ───────────
+        action_history.append({
+            "action": clean_action,
+            "feedback": observation.get("message", ""),
+            "reward": reward,
+        })
 
         # Structured log: [STEP]
         print(json.dumps({
