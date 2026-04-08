@@ -22,9 +22,10 @@ class SimpleAtomClient:
     def __init__(self, base_url: str, api_key: str):
         self.base_url = base_url.rstrip("/")
         self.headers = {
-            "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         }
+        if api_key:
+            self.headers["Authorization"] = f"Bearer {api_key}"
 
     def reset(self, task_id: int = 1):
         resp = httpx.post(
@@ -265,7 +266,7 @@ def main():
 
     # ATOM Server configuration
     atom_api_key = os.environ.get("ATOM_API_KEY", "")
-    atom_server_url = os.environ.get("ATOM_SERVER_URL", "https://nikhhil07-atom-env.hf.space")
+    atom_server_url = os.environ.get("ATOM_SERVER_URL", "http://localhost:8000")
 
     print(f"Using Model: {model_name}")
     print(f"Using API Base: {base_url}")

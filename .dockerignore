@@ -1,0 +1,9 @@
+.git
+.gitignore
+.venv
+__pycache__
+*.pyc
+node_modules
+atom_web/node_modules
+atom_web/dist
+tests/
