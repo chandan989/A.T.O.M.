@@ -1,12 +1,3 @@
----
-title: A.T.O.M.
-emoji: ⚛️
-colorFrom: purple
-colorTo: blue
-sdk: docker
-pinned: false
----
-
 <div align="center">
   <img src="Logo.svg" alt="A.T.O.M. Logo" width="220" />
 
