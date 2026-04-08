@@ -53,7 +53,8 @@ from openai import OpenAI
 
 API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
-HF_TOKEN = os.getenv("HF_TOKEN")
+# Phase-2 validators typically inject API_KEY. Keep HF_TOKEN as a fallback for local use.
+API_KEY = os.getenv("API_KEY") or os.getenv("HF_TOKEN")
 
 # Optional — if you use from_docker_image():
 LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME")
@@ -75,7 +76,7 @@ def log_start(task: str, env: str, model: str) -> None:
 
 
 def log_step(step: int, action: str, reward: float, done: bool, error: Optional[str]) -> None:
-    error_val = error if error else "null"
+    error_val = "null" if not error else str(error).replace("\r", "\\r").replace("\n", "\\n")
     done_val = str(done).lower()
     print(
         f"[STEP] step={step} action={action} reward={reward:.2f} done={done_val} error={error_val}",
@@ -354,16 +355,11 @@ def run_task(client: SimpleAtomClient, llm: OpenAI, model_name: str, task_id: in
 # ══════════════════════════════════════════════════════════════
 
 def main():
-    llm = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
+    llm = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
     client = SimpleAtomClient(ATOM_SERVER_URL, ATOM_API_KEY)
 
-    scores = {}
     for task_id in TASK_IDS:
-        scores[task_id] = run_task(client, llm, MODEL_NAME, task_id)
-
-    print("\n=== Final Scores ===")
-    for tid, sc in scores.items():
-        print(f"Task {tid}: {sc:.4f}")
+        run_task(client, llm, MODEL_NAME, task_id)
 
 
 if __name__ == "__main__":
