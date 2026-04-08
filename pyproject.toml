@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "atom-env"
+version = "0.1.0"
+description = "ATOM - Agentic Trajectories for Optimizing Molecules"
+authors = [
+    {name = "Meta PyTorch Hackathon"},
+]
+dependencies = [
+    "rdkit",
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "openenv-core>=0.2.0"
+]
+requires-python = ">=3.10"
+
+[project.scripts]
+server = "server.app:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["server"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]
