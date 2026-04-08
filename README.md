@@ -1,3 +1,13 @@
+---
+title: A.T.O.M. — Agentic Trajectories for Optimizing Molecules
+emoji: ⚛️
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 <div align="center">
   <img src="Logo.svg" alt="A.T.O.M. Logo" width="220" />
 
