@@ -122,7 +122,8 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         # Only enforce API key authentication on protected backend routes
-        protected_prefixes = ("/env/", "/auth/verify", "/tasks", "/observers")
+        # NOTE: /env/ routes are PUBLIC so the automated validator can call reset()/step()/state()
+        protected_prefixes = ("/auth/verify", "/tasks", "/observers")
         is_protected = any(request.url.path.startswith(prefix) for prefix in protected_prefixes)
         
         if not is_protected:
