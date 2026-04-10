@@ -1,9 +1,16 @@
 .git
 .gitignore
 .venv
+.idea
 __pycache__
 *.pyc
 node_modules
-atom_web/node_modules
-atom_web/dist
+atom_web
 tests/
+.pytest_cache
+Logo.png
+Logo.svg
+*.md
+index.html
+uv.lock
+Design System.md
