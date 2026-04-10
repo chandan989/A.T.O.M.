@@ -45,6 +45,7 @@ STDOUT FORMAT
 import json
 import os
 import re
+import sys
 import textwrap
 from typing import Dict, Any, List, Optional
 
@@ -53,8 +54,8 @@ from openai import OpenAI
 
 API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
-# Phase-2 validators typically inject API_KEY. Keep HF_TOKEN as a fallback for local use.
-API_KEY = os.getenv("API_KEY") or os.getenv("HF_TOKEN")
+# Phase-2 validators inject API_KEY; fall back to HF_TOKEN only for local dev.
+API_KEY = os.getenv("API_KEY", "") or os.getenv("HF_TOKEN", "")
 
 # Optional — if you use from_docker_image():
 LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME")
@@ -65,6 +66,11 @@ ATOM_API_KEY = os.getenv("ATOM_API_KEY", "")
 TASK_IDS = [1, 2, 3, 4]
 BENCHMARK = os.getenv("ATOM_BENCHMARK", "atom")
 TEMPERATURE = 0.1
+
+# Debug: log the resolved configuration to stderr so validator logs can confirm
+print(f"[CONFIG] API_BASE_URL={API_BASE_URL}", file=sys.stderr)
+print(f"[CONFIG] MODEL_NAME={MODEL_NAME}", file=sys.stderr)
+print(f"[CONFIG] API_KEY={'***' + API_KEY[-4:] if API_KEY and len(API_KEY) > 4 else '(not set)'}", file=sys.stderr)
 
 
 # ══════════════════════════════════════════════════════════════
@@ -355,7 +361,12 @@ def run_task(client: SimpleAtomClient, llm: OpenAI, model_name: str, task_id: in
 # ══════════════════════════════════════════════════════════════
 
 def main():
-    llm = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
+    # Ensure we use api_key properly — if empty, use a placeholder so OpenAI
+    # client does NOT fall back to OPENAI_API_KEY env var (which could bypass proxy).
+    api_key = API_KEY if API_KEY else "no-key-provided"
+    llm = OpenAI(base_url=API_BASE_URL, api_key=api_key)
+    print(f"[CONFIG] OpenAI client initialized: base_url={llm.base_url}", file=sys.stderr)
+
     client = SimpleAtomClient(ATOM_SERVER_URL, ATOM_API_KEY)
 
     for task_id in TASK_IDS:
