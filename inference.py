@@ -56,10 +56,10 @@ from openai import OpenAI
 #  CONFIGURATION — Match sample inference.py pattern exactly
 # ══════════════════════════════════════════════════════════════
 
-# API key: use HF_TOKEN or API_KEY (matches sample pattern)
-API_KEY = os.getenv("HF_TOKEN") or os.getenv("API_KEY")
+# API key: prioritize API_KEY (injected by validator) over HF_TOKEN
+API_KEY = os.getenv("API_KEY") or os.getenv("HF_TOKEN")
 
-# API base URL: use injected value, fall back to HF router for local dev
+# API base URL: strictly use injected value, fall back to HF router for local dev
 API_BASE_URL = os.getenv("API_BASE_URL") or "https://router.huggingface.co/v1"
 
 # Model name
