@@ -52,25 +52,35 @@ from typing import Dict, Any, List, Optional
 import httpx
 from openai import OpenAI
 
-API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
-MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
-# Phase-2 validators inject API_KEY; fall back to HF_TOKEN only for local dev.
-API_KEY = os.getenv("API_KEY", "") or os.getenv("HF_TOKEN", "")
+# ══════════════════════════════════════════════════════════════
+#  CONFIGURATION — Match sample inference.py pattern exactly
+# ══════════════════════════════════════════════════════════════
+
+# API key: use HF_TOKEN or API_KEY (matches sample pattern)
+API_KEY = os.getenv("HF_TOKEN") or os.getenv("API_KEY")
+
+# API base URL: use injected value, fall back to HF router for local dev
+API_BASE_URL = os.getenv("API_BASE_URL") or "https://router.huggingface.co/v1"
+
+# Model name
+MODEL_NAME = os.getenv("MODEL_NAME") or "Qwen/Qwen2.5-72B-Instruct"
 
 # Optional — if you use from_docker_image():
 LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME")
 
-ATOM_SERVER_URL = os.getenv("ATOM_SERVER_URL", "http://localhost:8000")
-ATOM_API_KEY = os.getenv("ATOM_API_KEY", "")
+# Environment server connection
+ATOM_SERVER_URL = os.getenv("ATOM_SERVER_URL") or "http://localhost:8000"
+ATOM_API_KEY = os.getenv("ATOM_API_KEY") or ""
 
 TASK_IDS = [1, 2, 3, 4]
-BENCHMARK = os.getenv("ATOM_BENCHMARK", "atom")
+BENCHMARK = os.getenv("ATOM_BENCHMARK") or "atom"
 TEMPERATURE = 0.1
 
-# Debug: log the resolved configuration to stderr so validator logs can confirm
-print(f"[CONFIG] API_BASE_URL={API_BASE_URL}", file=sys.stderr)
-print(f"[CONFIG] MODEL_NAME={MODEL_NAME}", file=sys.stderr)
-print(f"[CONFIG] API_KEY={'***' + API_KEY[-4:] if API_KEY and len(API_KEY) > 4 else '(not set)'}", file=sys.stderr)
+# Debug: log to stderr so we can trace issues without polluting stdout
+print(f"[DEBUG] API_BASE_URL={API_BASE_URL}", file=sys.stderr, flush=True)
+print(f"[DEBUG] MODEL_NAME={MODEL_NAME}", file=sys.stderr, flush=True)
+print(f"[DEBUG] API_KEY={'***' + API_KEY[-4:] if API_KEY and len(API_KEY) > 4 else repr(API_KEY)}", file=sys.stderr, flush=True)
+print(f"[DEBUG] ATOM_SERVER_URL={ATOM_SERVER_URL}", file=sys.stderr, flush=True)
 
 
 # ══════════════════════════════════════════════════════════════
@@ -172,6 +182,26 @@ def action_to_str(action: Dict[str, Any]) -> str:
 
 
 # ══════════════════════════════════════════════════════════════
+#  LLM CALL WRAPPER (with visible error logging)
+# ══════════════════════════════════════════════════════════════
+
+def call_llm(llm: OpenAI, model_name: str, prompt: str) -> Optional[str]:
+    """Call the LLM and return the response text. Logs errors to stderr."""
+    try:
+        resp = llm.chat.completions.create(
+            model=model_name,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=TEMPERATURE,
+        )
+        text = (resp.choices[0].message.content or "").strip()
+        return text
+    except Exception as exc:
+        # CRITICAL: Log the error so we can diagnose proxy issues
+        print(f"[DEBUG] LLM call FAILED: {type(exc).__name__}: {exc}", file=sys.stderr, flush=True)
+        return None
+
+
+# ══════════════════════════════════════════════════════════════
 #  PROMPT CONSTRUCTION
 # ══════════════════════════════════════════════════════════════
 
@@ -270,30 +300,23 @@ def run_task(client: SimpleAtomClient, llm: OpenAI, model_name: str, task_id: in
 
             prompt = build_prompt(observation, valid_sites_cache, action_history, step, max_steps)
 
-            # Generator LLM call
-            try:
-                generator_resp = llm.chat.completions.create(
-                    model=model_name,
-                    messages=[{"role": "user", "content": prompt}],
-                    temperature=TEMPERATURE,
-                )
-                proposed_action = parse_action(generator_resp.choices[0].message.content)
-            except Exception:
-                proposed_action = {"action_type": "finish"}
+            # Generator LLM call — errors are logged to stderr, not silently swallowed
+            gen_text = call_llm(llm, model_name, prompt)
+            if gen_text is not None:
+                proposed_action = parse_action(gen_text)
+            else:
+                # LLM failed — use a safe fallback but DON'T immediately finish
+                proposed_action = {"action_type": "get_valid_sites"}
 
             # Critic (only for add_fragment)
             if proposed_action.get("action_type") in ("get_valid_sites", "finish"):
                 final_action = proposed_action
             else:
                 critic_prompt = build_critic_prompt(observation, proposed_action)
-                try:
-                    critic_resp = llm.chat.completions.create(
-                        model=model_name,
-                        messages=[{"role": "user", "content": critic_prompt}],
-                        temperature=TEMPERATURE,
-                    )
-                    final_action = parse_action(critic_resp.choices[0].message.content)
-                except Exception:
+                critic_text = call_llm(llm, model_name, critic_prompt)
+                if critic_text is not None:
+                    final_action = parse_action(critic_text)
+                else:
                     final_action = proposed_action
 
             # Sanitize action
@@ -347,6 +370,7 @@ def run_task(client: SimpleAtomClient, llm: OpenAI, model_name: str, task_id: in
         success = score > 0.0
 
     except Exception as exc:
+        print(f"[DEBUG] Task {task_id} EXCEPTION: {type(exc).__name__}: {exc}", file=sys.stderr, flush=True)
         log_step(step=steps_taken + 1, action="error", reward=0.0, done=True, error=str(exc))
         steps_taken += 1
 
@@ -361,11 +385,9 @@ def run_task(client: SimpleAtomClient, llm: OpenAI, model_name: str, task_id: in
 # ══════════════════════════════════════════════════════════════
 
 def main():
-    # Ensure we use api_key properly — if empty, use a placeholder so OpenAI
-    # client does NOT fall back to OPENAI_API_KEY env var (which could bypass proxy).
-    api_key = API_KEY if API_KEY else "no-key-provided"
-    llm = OpenAI(base_url=API_BASE_URL, api_key=api_key)
-    print(f"[CONFIG] OpenAI client initialized: base_url={llm.base_url}", file=sys.stderr)
+    # Initialize OpenAI client with injected env vars (matches sample pattern)
+    llm = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
+    print(f"[DEBUG] OpenAI client base_url={llm.base_url}", file=sys.stderr, flush=True)
 
     client = SimpleAtomClient(ATOM_SERVER_URL, ATOM_API_KEY)
 
