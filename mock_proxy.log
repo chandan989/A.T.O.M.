@@ -1,0 +1,37 @@
+INFO:     Started server process [5033]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+ERROR:    [Errno 48] error while attempting to bind on address ('0.0.0.0
+--- [MOCK PROXY] RECEIVED REQUEST ---
+Headers: {
+  "host": "localhost:5050",
+  "accept-encoding": "gzip, deflate",
+  "connection": "keep-alive",
+  "accept": "application/json",
+  "content-type": "application/json",
+  "user-agent": "OpenAI/Python 2.31.0",
+  "x-stainless-lang": "python",
+  "x-stainless-package-version": "2.31.0",
+  "x-stainless-os": "MacOS",
+  "x-stainless-arch": "arm64",
+  "x-stainless-runtime": "CPython",
+  "x-stainless-runtime-version": "3.9.6",
+  "authorization": "Bearer local-trial-api-key-123",
+  "x-stainless-async": "false",
+  "x-stainless-retry-count": "0",
+  "x-stainless-read-timeout": "600",
+  "content-length": "1200"
+}
+Payload: {
+  "messages": [
+    {
+      "role": "user",
+      "content": "You are an expert medicinal chemist optimizing a molecule to match a Target Product Profile (TPP).\n\nCurrent SMILES: C\nCurrent Properties: {\n  \"MW\": 16.0,\n  \"LogP\": 1.0\n}\nTarget Profile (TPP): {\n  \"MW\": [\n    100,\n    200\n  ],\n  \"LogP\": [\n    2,\n    3\n  ]\n}\nStep: 1/5\n\nYou ALREADY have valid sites. You MUST use \"add_fragment\" now. Do NOT call \"get_valid_sites\" again.\nAnalyze the GAP between current properties and target ranges. Pick the fragment that closes the biggest gap.\n\nValid Sites:\n[\n  {\n    \"site_id\": 0,\n    \"atom_index\": 0\n  }\n]\n\nAvailable fragments (case-sensitive):\n- To INCREASE LogP: Methyl, Ethyl, Propyl, Isopropyl, tert-Butyl, Phenyl, Trifluoromethyl, Chlorine, Fluorine\n- To DECREASE LogP: Hydroxyl, Amino, Carboxyl, Cyano, Amide, Morpholine\n- To INCREASE MW: Phenyl, Cyclohexyl, Naphthalene, Indole, Piperidine\n- To fine-tune: Methoxy, Cyclopropyl, Pyridine, Thiophene, Acetyl\n\nRespond with ONLY JSON, no explanation:\n{\"action_type\": \"add_fragment\", \"fragment_name\": \"Methyl\", \"site_id\": 0}\nor {\"action_type\": \"finish\"}"
+    }
+  ],
+  "model": "mock-chemistry-model",
+  "temperature": 0.1
+}
+---------------------------------------
+
+INFO:     127.0.0.1:52200 - "POST /v1/chat/completions HTTP/1.1" 200 OK

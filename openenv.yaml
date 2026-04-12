@@ -1,8 +1,16 @@
 name: atom_env
+version: 2.0.4
 description: ATOM - Agentic Trajectories for Optimizing Molecules
 
-# Use openenv base image which includes python + fast API + core
+# Deployment configuration
 docker_image: openenv-atom-env:latest
 base_image: ghcr.io/meta-pytorch/openenv-base:latest
+app_port: 7860
 
-repository: "meta-pytorch/openenv-atom-env"
+# Environment specification
+tasks: 4
+entrypoint: "python3 inference.py"
+benchmark: "atom"
+
+repository: "chandan989/A.T.O.M."
+license: MIT
